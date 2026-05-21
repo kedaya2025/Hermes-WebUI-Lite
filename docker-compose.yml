@@ -1,9 +1,6 @@
 services:
   hermes-webui:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: ${WEBUI_IMAGE:-hermes-web-ui-local:latest}
+    image: ${WEBUI_IMAGE:-ghcr.io/kedaya2025/hermes-webui-lite:main}
     container_name: ${WEBUI_CONTAINER_NAME:-hermes-webui}
     ports:
       - "${PORT:-6060}:${PORT:-6060}"
