@@ -89,6 +89,17 @@ This fork keeps the main Hermes Web UI capabilities, including:
 
 ### Docker Compose
 
+Hermes WebUI Lite is **not** a self-contained Hermes runtime image. It is intended only for hosts that already have a working Hermes installation and configuration on the host machine.
+
+Use this fork when:
+
+- Hermes is already installed on the host
+- the host already has a usable Hermes home / config / credentials
+- the Web UI container should reuse the host Hermes runtime
+- the gateway remains managed outside the container
+
+Do **not** use this Lite image as a drop-in replacement for the original all-in-one WebUI container if the host does not already provide Hermes.
+
 ```bash
 git clone https://github.com/kedaya2025/Hermes-WebUI-Lite.git
 cd Hermes-WebUI-Lite
@@ -102,6 +113,82 @@ http://localhost:6060
 ```
 
 For operational details, see [`docs/docker.md`](./docs/docker.md).
+
+## Host Runtime Requirements
+
+A host-managed deployment must provide all of the following:
+
+- Hermes source/runtime mounted into the container at `/host-hermes`
+- the host Hermes virtual environment mounted so the shebang interpreter path remains valid
+- the host uv runtime cache mounted when the host Hermes installation depends on uv-managed Python assets
+- a valid Hermes home mounted into the container
+
+At minimum, the deployment must include:
+
+```yaml
+environment:
+  HERMES_BIN: /host-hermes/venv/bin/hermes
+  HERMES_AGENT_ROOT: /host-hermes
+  PYTHONPATH: /host-hermes
+  HERMES_AGENT_BRIDGE_PYTHON: ""
+  HERMES_SKIP_GATEWAY_AUTOSTART: "1"
+
+volumes:
+  - /usr/local/lib/hermes-agent:/host-hermes:ro
+  - /usr/local/lib/hermes-agent/venv:/usr/local/lib/hermes-agent/venv:ro
+  - /root/.local/share/uv:/root/.local/share/uv:ro
+  - /root/.hermes:/home/agent/.hermes
+```
+
+## Troubleshooting: Plugins or Logs API Fails After Slim Deployment
+
+If the Lite container starts but these endpoints fail:
+
+- `/api/hermes/plugins`
+- `/api/hermes/logs/agent?lines=5`
+
+then the most likely cause is an incomplete host-runtime mount set.
+
+### Symptoms
+
+- plugins page returns an error instead of JSON
+- logs page returns an error instead of real log lines
+- container health page may still look normal
+
+### Required checks
+
+Inside the container, verify:
+
+```bash
+head -1 /host-hermes/venv/bin/hermes
+which python3
+env | grep -E '^(HERMES_BIN|HERMES_AGENT_ROOT|HERMES_AGENT_BRIDGE_PYTHON|PYTHONPATH)='
+```
+
+The deployment should also include these mounts:
+
+```yaml
+- /usr/local/lib/hermes-agent/venv:/usr/local/lib/hermes-agent/venv:ro
+- /root/.local/share/uv:/root/.local/share/uv:ro
+```
+
+And this environment variable:
+
+```yaml
+PYTHONPATH: /host-hermes
+```
+
+### Recovery procedure
+
+1. Add the missing volume mounts
+2. Add `PYTHONPATH=/host-hermes`
+3. Recreate the container
+4. Verify:
+
+```bash
+curl -fsS http://127.0.0.1:6060/api/hermes/plugins
+curl -fsS 'http://127.0.0.1:6060/api/hermes/logs/agent?lines=5'
+```
 
 ## Repository Layout
 
