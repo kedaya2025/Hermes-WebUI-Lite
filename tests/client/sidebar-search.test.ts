@@ -107,28 +107,6 @@ describe('AppSidebar search entry', () => {
     expect(openSessionSearchMock).toHaveBeenCalledTimes(1)
   })
 
-  it('offers a client reload when the server version differs from the loaded bundle', async () => {
-    mockAppStore.clientOutdated = true
-    mockAppStore.serverVersion = '0.5.17'
-    const wrapper = mount(AppSidebar, {
-      global: {
-        stubs: {
-          ProfileSelector: true,
-          ModelSelector: true,
-          LanguageSwitch: true,
-          ThemeSwitch: true,
-        },
-      },
-    })
-
-    const reloadButton = wrapper.findAll('button')
-      .find(node => node.text().includes('sidebar.reloadClientVersion'))
-    expect(reloadButton).toBeTruthy()
-
-    await reloadButton!.trigger('click')
-    expect(mockAppStore.reloadClient).toHaveBeenCalledTimes(1)
-  })
-
   it('uses short group labels and keeps group folding active when collapsed', async () => {
     mockAppStore.sidebarCollapsed = true
     const wrapper = mount(AppSidebar, {

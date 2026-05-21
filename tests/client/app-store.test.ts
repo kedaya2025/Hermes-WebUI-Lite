@@ -157,12 +157,10 @@ describe('App Store', () => {
     expect(mockSystemApi.updateDefaultModel).not.toHaveBeenCalled()
   })
 
-  it('marks the client stale when the served Web UI version changes', async () => {
+  it('reads server version from health without client update state in lite edition', async () => {
     mockSystemApi.checkHealth.mockResolvedValue({
       status: 'ok',
       webui_version: '0.5.17',
-      webui_latest: '0.5.17',
-      webui_update_available: false,
     })
     const store = useAppStore()
 
@@ -170,36 +168,8 @@ describe('App Store', () => {
 
     expect(store.connected).toBe(true)
     expect(store.serverVersion).toBe('0.5.17')
-    expect(store.clientOutdated).toBe(true)
-    expect(store.updateAvailable).toBe(false)
-  })
-
-  it('does not mark the client stale when the served Web UI version matches this bundle', async () => {
-    mockSystemApi.checkHealth.mockResolvedValue({
-      status: 'ok',
-      webui_version: 'test',
-      webui_latest: 'test',
-      webui_update_available: false,
-    })
-    const store = useAppStore()
-
-    await store.checkConnection()
-
-    expect(store.serverVersion).toBe('test')
-    expect(store.clientOutdated).toBe(false)
-  })
-
-  it('clears the updating state and reports failure when self-update request fails', async () => {
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
-    mockSystemApi.triggerUpdate.mockRejectedValue(new Error('install failed'))
-    const store = useAppStore()
-
-    const ok = await store.doUpdate()
-
-    expect(ok).toBe(false)
-    expect(store.updating).toBe(false)
-    expect(consoleError).toHaveBeenCalledWith('Failed to update Hermes Web UI:', expect.any(Error))
-    consoleError.mockRestore()
+    expect((store as any).clientOutdated).toBeUndefined()
+    expect((store as any).updateAvailable).toBeUndefined()
   })
 
   it('loads model aliases and resolves display names without changing canonical IDs', async () => {

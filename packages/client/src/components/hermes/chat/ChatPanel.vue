@@ -1052,6 +1052,20 @@ async function handleSessionModelCustomSubmit() {
           <template v-if="currentMode === 'chat'">
             <NTooltip trigger="hover">
               <template #trigger>
+                <NButton quaternary size="small" @click="showDrawer = true" circle>
+                  <template #icon>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                      <line x1="9" y1="3" x2="9" y2="21" />
+                      <line x1="15" y1="3" x2="15" y2="21" />
+                    </svg>
+                  </template>
+                </NButton>
+              </template>
+              {{ t("chat.workspace") }}
+            </NTooltip>
+            <NTooltip trigger="hover">
+              <template #trigger>
                 <NButton
                   quaternary
                   size="small"
@@ -1194,24 +1208,6 @@ async function handleSessionModelCustomSubmit() {
         v-else
         :human-only="sessionBrowserPrefsStore.humanOnly"
       />
-    </div>
-
-    <!-- Floating drawer button -->
-    <div class="drawer-button-wrapper">
-      <div class="drawer-button" @click="showDrawer = true">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.5"
-        >
-          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-          <line x1="9" y1="3" x2="9" y2="21" />
-          <line x1="15" y1="3" x2="15" y2="21" />
-        </svg>
-      </div>
     </div>
 
     <DrawerPanel v-model:show="showDrawer" :active-tab="drawerActiveTab" />
@@ -1811,52 +1807,6 @@ async function handleSessionModelCustomSubmit() {
   text-overflow: ellipsis;
   white-space: nowrap;
   cursor: default;
-}
-
-// ─── Drawer button ─────────────────────────────────────────────
-
-.drawer-button-wrapper {
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 100;
-  background: $bg-card;
-  border-radius: 50%;
-  box-shadow:
-    0 0 10px rgba(255, 107, 107, 0.4),
-    0 0 20px rgba(255, 107, 107, 0.2);
-  animation: rainbow-glow 8s linear infinite;
-  transition: all $transition-fast;
-
-  &:hover {
-    animation-play-state: paused;
-    box-shadow:
-      0 0 15px rgba(255, 107, 107, 0.6),
-      0 0 30px rgba(255, 107, 107, 0.3);
-  }
-}
-
-.drawer-button {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(var(--accent-primary-rgb), 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all $transition-fast;
-
-  svg {
-    width: 18px;
-    height: 18px;
-    color: var(--accent-primary);
-  }
-
-  &:hover {
-    transform: scale(1.1);
-  }
 }
 
 .approval-bar {

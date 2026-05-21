@@ -4,7 +4,6 @@ import type { Context, Next } from 'koa'
 import { healthRoutes } from './health'
 import { webhookRoutes } from './webhook'
 import { uploadRoutes } from './upload'
-import { updateRoutes } from './update'
 import { authPublicRoutes, authProtectedRoutes } from './auth'
 
 // Hermes route modules
@@ -50,7 +49,6 @@ export function registerRoutes(app: any, requireAuth: (ctx: Context, next: Next)
   // --- Protected routes (auth required) ---
   app.use(authProtectedRoutes.routes())
   app.use(uploadRoutes.routes())
-  app.use(updateRoutes.routes())           // Must be before proxy (proxy catch-all matches everything)
   app.use(sessionRoutes.routes())
   app.use(profileRoutes.routes())
   app.use(skillRoutes.routes())

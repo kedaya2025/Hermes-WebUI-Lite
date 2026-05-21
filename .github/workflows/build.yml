@@ -4,7 +4,9 @@ on:
   pull_request:
     branches:
       - main
-      - base
+  push:
+    branches:
+      - main
 
 jobs:
   build:
@@ -18,12 +20,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 23
+          cache: npm
 
       - name: Install dependencies
         run: npm install
 
-      - name: Test with coverage
-        run: npm run test:coverage
+      - name: Run unit tests
+        run: npm run test
 
       - name: Build
         run: npm run build

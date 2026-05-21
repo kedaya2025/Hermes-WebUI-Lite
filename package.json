@@ -1,12 +1,12 @@
 {
   "name": "hermes-web-ui",
   "version": "0.5.30",
-  "description": "Self-hosted AI chat dashboard for Hermes Agent — multi-model web UI with multi-platform integration",
+  "description": "Lightweight Docker-first web interface for Hermes Agent deployments",
   "repository": {
     "type": "git",
-    "url": "https://github.com/EKKOLearnAI/hermes-web-ui.git"
+    "url": "https://github.com/kedaya2025/Hermes-WebUI-Lite.git"
   },
-  "homepage": "https://ekkolearnai.com",
+  "homepage": "https://github.com/kedaya2025/Hermes-WebUI-Lite",
   "license": "BSL-1.1",
   "engines": {
     "node": ">=23.0.0"
@@ -45,10 +45,6 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "dev:website": "vite --config vite.config.website.ts",
-    "build:website": "vite build --config vite.config.website.ts",
-    "preview:website": "vite preview --config vite.config.website.ts",
-    "openapi:generate": "node scripts/generate-openapi.mjs",
     "claude": "claude --dangerously-skip-permissions"
   },
   "files": [

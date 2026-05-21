@@ -1,24 +1,20 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from "vue";
+import { computed, reactive } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
-import { NButton, NModal, useMessage } from "naive-ui";
 import { useAppStore } from "@/stores/hermes/app";
 import ModelSelector from "./ModelSelector.vue";
 import ProfileSelector from "./ProfileSelector.vue";
 import LanguageSwitch from "./LanguageSwitch.vue";
 import ThemeSwitch from "./ThemeSwitch.vue";
 import { useSessionSearch } from '@/composables/useSessionSearch'
-import { changelog } from "@/data/changelog";
 
 const { t } = useI18n();
-const message = useMessage();
 const route = useRoute();
 const router = useRouter();
 const appStore = useAppStore();
 const { openSessionSearch } = useSessionSearch();
 const selectedKey = computed(() => route.name as string);
-const logoPath = '/logo.png';
 
 const collapsedGroups = reactive<Record<string, boolean>>({});
 
@@ -40,38 +36,16 @@ function handleNav(key: string) {
   router.push({ name: key });
 }
 
-async function handleUpdate() {
-  const ok = await appStore.doUpdate();
-  if (ok) {
-    message.success(t('sidebar.updateSuccess'), { duration: 5000 });
-  } else {
-    message.error(t('sidebar.updateFailed'));
-  }
-}
-
-function handleReloadClient() {
-  appStore.reloadClient();
-}
-
 function handleLogout() {
   localStorage.clear();
   router.replace({ name: 'login' });
-}
-
-// Changelog
-const showChangelog = ref(false);
-
-function openChangelog() {
-  showChangelog.value = true;
 }
 </script>
 
 <template>
   <aside class="sidebar" :class="{ open: appStore.sidebarOpen, collapsed: appStore.sidebarCollapsed }">
     <div class="sidebar-logo" @click="router.push('/hermes/chat')">
-      <img :src="logoPath" alt="Hermes" class="logo-img" />
-      <span class="logo-text">Hermes</span>
-      <!-- <video class="logo-dance" :src="isDark ? danceVideoDark : danceVideoLight" autoplay loop muted playsinline /> -->
+      <span class="logo-text">Hermes WebUI</span>
     </div>
 
     <button class="collapse-btn" @click="appStore.toggleSidebarCollapsed()" :title="appStore.sidebarCollapsed ? t('sidebar.expand') : t('sidebar.collapse')">
@@ -120,10 +94,6 @@ function openChangelog() {
             </svg>
             <span>{{ t("sidebar.search") }}</span>
           </button>
-          <a class="nav-item fun-link" href="https://apikey.fun/register?aff=LIBAPI" target="_blank" rel="noopener noreferrer">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-            <span>{{ t('sidebar.apiRelay') }}</span>
-          </a>
         </div>
       </div>
 
@@ -293,38 +263,17 @@ function openChangelog() {
       </div>
       <div class="version-info">
         <div class="version-links">
-          <a class="github-link" href="https://github.com/EKKOLearnAI/hermes-web-ui" target="_blank" rel="noopener noreferrer" title="GitHub">
+          <a class="github-link" href="https://github.com/kedaya2025/Hermes-WebUI-Lite" target="_blank" rel="noopener noreferrer" title="GitHub">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
           </a>
-          <a class="website-link" href="https://ekkolearnai.com/" target="_blank" rel="noopener noreferrer" title="Website">
+          <a class="website-link" href="https://github.com/kedaya2025/Hermes-WebUI-Lite" target="_blank" rel="noopener noreferrer" title="Repository">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
           </a>
         </div>
-        <span class="version-text" @click="openChangelog">Web UI v{{ appStore.serverVersion || "0.1.0" }}</span>
+        <span class="version-text">Web UI v{{ appStore.serverVersion || "0.1.0" }}</span>
         <ThemeSwitch />
       </div>
-      <NButton v-if="appStore.clientOutdated" type="warning" size="tiny" block class="update-btn" @click="handleReloadClient">
-        {{ t('sidebar.reloadClientVersion', { version: appStore.serverVersion }) }}
-      </NButton>
-      <NButton v-if="appStore.updateAvailable" type="primary" size="tiny" block class="update-btn" :loading="appStore.updating" @click="handleUpdate">
-        {{ appStore.updating ? t('sidebar.updating') : t('sidebar.updateVersion', { version: appStore.latestVersion }) }}
-      </NButton>
     </div>
-
-    <!-- Changelog modal -->
-    <NModal v-model:show="showChangelog" preset="dialog" :title="t('sidebar.changelog')" style="width: 520px;">
-      <div class="changelog-list">
-        <div v-for="entry in changelog" :key="entry.version" class="changelog-version-block">
-          <div class="changelog-version-header">
-            <span class="changelog-version-tag">v{{ entry.version }}</span>
-            <span class="changelog-date">{{ entry.date }}</span>
-          </div>
-          <ul class="changelog-changes">
-            <li v-for="(change, idx) in entry.changes" :key="idx">{{ t(change) }}</li>
-          </ul>
-        </div>
-      </div>
-    </NModal>
   </aside>
 </template>
 
@@ -372,19 +321,6 @@ function openChangelog() {
     font-size: 18px;
     font-weight: 600;
     letter-spacing: 0.5px;
-  }
-
-  .logo-dance {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    height: 100px;
-    border-radius: $radius-md;
-    object-fit: contain;
-    flex-shrink: 0;
-    width: auto;
-    pointer-events: none;
   }
 }
 

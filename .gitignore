@@ -29,6 +29,7 @@ config.yaml
 .env
 hermes_data/
 hermes-dependencies.md
+.local-notes-ui-locations.md
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -773,12 +773,6 @@ onBeforeUnmount(() => {
     </template>
     <template v-else>
       <div class="msg-body">
-        <img
-          v-if="message.role === 'assistant'"
-          src="/logo.png"
-          alt="Hermes"
-          class="msg-avatar"
-        />
         <div class="msg-content" :class="message.role">
           <div
             class="message-bubble"
@@ -1011,14 +1005,12 @@ onBeforeUnmount(() => {
 
     .message-bubble {
       background-color: $msg-user-bg;
-      border-radius: 10px;
+      border-radius: 10px 10px 4px 10px;
     }
   }
 
   &.assistant {
-    flex-direction: row;
     align-items: flex-start;
-    gap: 8px;
 
     .msg-body {
       max-width: 80%;
@@ -1026,16 +1018,9 @@ onBeforeUnmount(() => {
       z-index: 1;
     }
 
-    .msg-avatar {
-      width: 40px;
-      height: 40px;
-      flex-shrink: 0;
-      margin-top: 2px;
-    }
-
     .message-bubble {
       background-color: $msg-assistant-bg;
-      border-radius: 10px;
+      border-radius: 10px 10px 10px 4px;
     }
   }
 

@@ -9,8 +9,8 @@ services:
       - "${PORT:-6060}:${PORT:-6060}"
       - "${XAI_OAUTH_PORT:-56121}:56121"
     volumes:
-      - ${HERMES_DATA_DIR:-./hermes_data}:/home/agent/.hermes
-      - ${HERMES_DATA_DIR:-./hermes_data}/hermes-web-ui:/home/agent/.hermes-web-ui
+      - /root/.hermes:/home/agent/.hermes
+      - /root/.hermes-web-ui:/home/agent/.hermes-web-ui
     environment:
       - PORT=${PORT:-6060}
       - HERMES_HOME=/home/agent/.hermes
@@ -22,3 +22,10 @@ services:
     restart: unless-stopped
     stdin_open: true
     tty: true
+    networks:
+      - default
+      - proxy-network
+
+networks:
+  proxy-network:
+    external: true
