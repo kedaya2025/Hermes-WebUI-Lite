@@ -124,11 +124,6 @@ const displayBody = computed(() => {
         .map((block: any) => block.text)
         .join('\n')
 })
-const copyableContent = computed(() => {
-    if (isToolMessage.value) return null
-    const content = displayBody.value || ''
-    return content.trim() ? content : null
-})
 
 const toolExpanded = ref(false)
 const isToolMessage = computed(() => props.message.role === 'tool')
@@ -341,14 +336,6 @@ function handleSpeechToggle() {
     if (canPlaySpeech.value) playSpeech(assistantBody.value)
 }
 
-async function copyBubbleContent() {
-    const text = copyableContent.value
-    if (!text) return
-    const ok = await copyTextToClipboard(text)
-    if (ok) toast.success(t('chat.copiedBubble'))
-    else toast.error(t('chat.copyFailed'))
-}
-
 function isImage(type: string): boolean {
     return type.startsWith('image/')
 }
@@ -477,7 +464,6 @@ onBeforeUnmount(() => {
                         >
                             <polyline points="9 18 15 12 9 6" />
                         </svg>
-                        <span class="thinking-icon">💭</span>
                         <span class="thinking-label">
                             {{ thinkingStreamingNow ? t('chat.thinkingInProgress') : t('chat.thinkingLabel') }}
                         </span>
@@ -502,17 +488,6 @@ onBeforeUnmount(() => {
                 >
                     <svg v-if="!isPlayingThisMessage || isPausedThisMessage" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                     <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-                </button>
-                <button
-                    v-if="copyableContent"
-                    class="copy-bubble-btn"
-                    :title="t('chat.copyBubble')"
-                    @click="copyBubbleContent"
-                >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                    </svg>
                 </button>
                 <span class="message-time">{{ timeStr }}</span>
             </div>
@@ -545,10 +520,12 @@ onBeforeUnmount(() => {
 
     &.agent .msg-content.agent-content {
         background-color: rgba(var(--accent-primary-rgb), 0.06);
+        border-radius: 12px 12px 12px 0;
     }
 
     &.self .msg-content {
         background-color: rgba(var(--accent-primary-rgb), 0.1);
+        border-radius: 12px 12px 0 12px;
     }
 }
 
@@ -567,9 +544,19 @@ onBeforeUnmount(() => {
 
     &.expandable {
         cursor: pointer;
+        background: #22c55e;
+        color: #ffffff;
 
         &:hover {
-            background: rgba(0, 0, 0, 0.03);
+            background: #16a34a;
+        }
+
+        .tool-name,
+        .tool-preview,
+        .tool-icon,
+        .tool-chevron {
+            color: inherit;
+            opacity: 1;
         }
     }
 }
@@ -825,10 +812,11 @@ onBeforeUnmount(() => {
     font-size: 14px;
     line-height: 1.65;
     color: $text-primary;
-    border-radius: 10px;
+    border-radius: 12px;
     background-color: $msg-user-bg;
     word-break: break-word;
     overflow-wrap: break-word;
+    position: relative;
 
     &.speech-playing {
         box-shadow:

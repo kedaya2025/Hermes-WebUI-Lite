@@ -5,7 +5,6 @@ import { useI18n } from "vue-i18n";
 import { useMessage } from "naive-ui";
 import { downloadFile } from "@/api/hermes/download";
 	import { getApiKey } from "@/api/client";
-import { copyToClipboard } from "@/utils/clipboard";
 import MarkdownRenderer from "./MarkdownRenderer.vue";
 import { parseThinking, countThinkingChars } from "@/utils/thinking-parser";
 import { useChatStore } from "@/stores/hermes/chat";
@@ -184,24 +183,12 @@ const settingsStore = useSettingsStore();
 const speech = useGlobalSpeech();
 const voiceSettings = useVoiceSettings();
 
-// Copy entire bubble content
 const copyableContent = computed(() => {
   if (props.message.role === 'tool') return null
   const content = props.message.content || ''
   if (!content.trim()) return null
   return content
 })
-
-async function copyBubbleContent() {
-  const text = copyableContent.value
-  if (!text) return
-  const ok = await copyToClipboard(text)
-  if (ok) {
-    toast.success(t('chat.copiedBubble'))
-    return
-  }
-  toast.error(t('chat.copyFailed'))
-}
 
 const parsedThinking = computed(() =>
   parseThinking(props.message.content || "", { streaming: !!props.message.isStreaming }),
@@ -842,7 +829,6 @@ onBeforeUnmount(() => {
                 >
                   <polyline points="9 18 15 12 9 6" />
                 </svg>
-                <span class="thinking-icon">💭</span>
                 <span class="thinking-label">
                   {{
                     thinkingStreamingNow
@@ -950,24 +936,8 @@ onBeforeUnmount(() => {
               @click="handleSpeechToggle"
               :title="isPlayingThisMessage ? (isPausedThisMessage ? t('chat.resumeSpeech') : t('chat.pauseSpeech')) : t('chat.playSpeech')"
             >
-              <svg v-if="!isPlayingThisMessage || isPausedThisMessage" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polygon points="5 3 19 12 5 21 5 3"/>
-              </svg>
-              <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="6" y="4" width="4" height="16"/>
-                <rect x="14" y="4" width="4" height="16"/>
-              </svg>
-            </button>
-            <button
-              v-if="copyableContent"
-              class="copy-bubble-btn"
-              @click="copyBubbleContent"
-              :title="t('chat.copyBubble')"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-              </svg>
+              <svg v-if="!isPlayingThisMessage || isPausedThisMessage" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
             </button>
             <span class="message-time">{{ timeStr }}</span>
           </div>
@@ -1005,7 +975,7 @@ onBeforeUnmount(() => {
 
     .message-bubble {
       background-color: $msg-user-bg;
-      border-radius: 10px 10px 4px 10px;
+      border-radius: 12px 12px 0 12px;
     }
   }
 
@@ -1020,7 +990,7 @@ onBeforeUnmount(() => {
 
     .message-bubble {
       background-color: $msg-assistant-bg;
-      border-radius: 10px 10px 10px 4px;
+      border-radius: 12px 12px 12px 0;
     }
   }
 
@@ -1417,9 +1387,19 @@ onBeforeUnmount(() => {
 
   &.expandable {
     cursor: pointer;
+    background: #22c55e;
+    color: #ffffff;
 
     &:hover {
-      background: rgba(0, 0, 0, 0.03);
+      background: #16a34a;
+    }
+
+    .tool-name,
+    .tool-preview,
+    .tool-icon,
+    .tool-chevron {
+      color: inherit;
+      opacity: 1;
     }
   }
 
