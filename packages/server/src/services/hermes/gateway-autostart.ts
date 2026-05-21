@@ -11,7 +11,7 @@ import { startGatewayRunManaged } from './gateway-runner'
 const execFileAsync = promisify(execFile)
 
 function resolveHermesBin(): string {
-  return process.env.HERMES_BIN?.trim() || 'hermes'
+  return 'hermes'
 }
 
 function isDockerRuntime(): boolean {
@@ -109,6 +109,10 @@ export async function clearApiServerForProfile(profileDir: string): Promise<void
 }
 
 export async function ensureProfileGatewaysRunning(): Promise<void> {
+  if (process.env.HERMES_SKIP_GATEWAY_AUTOSTART === '1' || process.env.HERMES_SKIP_GATEWAY_AUTOSTART === 'true') {
+    logger.info('[gateway-autostart] skipped — HERMES_SKIP_GATEWAY_AUTOSTART is set')
+    return
+  }
   const hermesBin = resolveHermesBin()
   const profiles = listProfileNamesFromDisk()
   for (const profile of profiles) {

@@ -314,14 +314,48 @@ async function buildAvailableForProfile(
   }
 
   const customProviders = Array.isArray(config.custom_providers)
-    ? config.custom_providers as Array<{ name: string; base_url: string; model: string; api_key?: string }>
+    ? config.custom_providers as Array<{ name: string; base_url: string; model: string; api_key?: string; models?: string[] }>
     : []
+  const legacyProvidersRaw =
+    !customProviders.length && config.providers && typeof config.providers === 'object' && !Array.isArray(config.providers)
+      ? Object.entries(config.providers as Record<string, any>).map(([name, value]) => {
+          const entry = value && typeof value === 'object' ? value as Record<string, any> : null
+          const models = Array.isArray(entry?.models)
+            ? entry.models.map((m: unknown) => String(m || '').trim()).filter(Boolean)
+            : entry?.models && typeof entry.models === 'object'
+              ? Object.keys(entry.models).map((m: unknown) => String(m || '').trim()).filter(Boolean)
+              : []
+          const primaryModel = String(entry?.model || models[0] || '').trim()
+          const baseUrl = String(entry?.base_url || '').trim()
+          const apiKey = String(entry?.api_key || '').trim()
+          if (!String(name || '').trim() || !baseUrl || !primaryModel) return null
+          return {
+            name: String(name).trim(),
+            base_url: baseUrl,
+            model: primaryModel,
+            api_key: apiKey,
+            models,
+          }
+        })
+      : []
+  const legacyProviders = legacyProvidersRaw.filter((entry): entry is { name: string; base_url: string; model: string; api_key: string; models: string[] } => entry !== null)
+  const effectiveCustomProviders = customProviders.length > 0
+    ? customProviders.map(cp => ({
+        ...cp,
+        api_key: cp.api_key || '',
+        models: Array.isArray(cp.models) && cp.models.length > 0
+          ? cp.models.map(m => String(m || '').trim()).filter(Boolean)
+          : [cp.model].filter(Boolean),
+      }))
+    : legacyProviders
   const customFetches = await Promise.allSettled(
-    customProviders.map(async cp => {
+    effectiveCustomProviders.map(async cp => {
       if (!cp.base_url) return null
       const providerKey = providerKeyForCustom(cp.name)
       const baseUrl = cp.base_url.replace(/\/+$/, '')
-      let models = [cp.model].filter(Boolean)
+      let models = Array.isArray(cp.models) && cp.models.length > 0
+        ? cp.models.filter(Boolean)
+        : [cp.model].filter(Boolean)
       if (cp.api_key) {
         const fetched = await cachedProviderModels(fetchCache, baseUrl, cp.api_key)
         if (fetched.length > 0) models = [...new Set([...models, ...fetched])]
@@ -335,6 +369,38 @@ async function buildAvailableForProfile(
       addGroup(providerKey, label, base_url, models, api_key)
     }
   }
+
+
+  // --- Credential Pool Discovery ---
+  // Scan auth.json credential_pool for providers that have valid credentials
+  // but are not in PROVIDER_ENV_MAP or custom_providers (e.g. nvidia via env).
+  try {
+    const authPath = profileAuthPath(profile)
+    if (existsSync(authPath)) {
+      const auth = JSON.parse(readFileSync(authPath, 'utf-8'))
+      const pool = auth.credential_pool
+      if (pool && typeof pool === 'object') {
+        for (const [poolKey, entries] of Object.entries(pool)) {
+          if (seenProviders.has(poolKey)) continue
+          if (!Array.isArray(entries) || entries.length === 0) continue
+          const validEntry = (entries as any[]).find((e: any) => e?.access_token && e?.base_url)
+          if (!validEntry) continue
+          const baseUrl = String(validEntry.base_url || '').replace(/\/+$/, '')
+          const apiKey = String(validEntry.access_token || '')
+          const label = String(validEntry.label || poolKey).replace(/^env:/, '')
+          if (!baseUrl || !apiKey) continue
+          let models: string[] = []
+          try {
+            const fetched = await cachedProviderModels(fetchCache, baseUrl, apiKey)
+            if (fetched.length > 0) models = fetched
+          } catch {}
+          if (models.length > 0) {
+            addGroup(poolKey, label, baseUrl, models, apiKey)
+          }
+        }
+      }
+    }
+  } catch {}
 
   if (groups.length === 0) {
     const fallback = buildModelGroups(config)

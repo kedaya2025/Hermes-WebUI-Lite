@@ -7,6 +7,7 @@ import { stripLegacyApiServerGatewayConfig, updateConfigYaml } from '../config-h
 import { getActiveProfileDir, getProfileDir } from './hermes-profile'
 import { startGatewayRunManaged } from './gateway-runner'
 import { isGatewayRunningForProfile } from './gateway-autostart'
+import { getHermesBin, buildHermesExec } from './hermes-path'
 
 const execFileAsync = promisify(execFile)
 
@@ -18,13 +19,9 @@ const isTermux = !!process.env.TERMUX_VERSION ||
 
 /**
  * 解析 Hermes CLI 二进制路径
- * 优先使用环境变量 HERMES_BIN，否则使用 PATH 中的 'hermes' 命令
+ * 优先使用经过兼容性探测的 getHermesBin()，避免挂载宿主机 venv 时 shebang 指向容器内不存在解释器。
  */
-function resolveHermesBin(): string {
-  return process.env.HERMES_BIN?.trim() || 'hermes'
-}
-
-const HERMES_BIN = resolveHermesBin()
+const HERMES_BIN = getHermesBin()
 
 async function waitForGatewayRunning(profileDir: string, timeoutMs = 15000): Promise<boolean> {
   const deadline = Date.now() + timeoutMs
@@ -507,8 +504,9 @@ export async function stopGateway(): Promise<string> {
  * List available log files
  */
 export async function listLogFiles(): Promise<LogFileInfo[]> {
+  const { command, args } = buildHermesExec(undefined, ['logs', 'list'])
   try {
-    const { stdout } = await execFileAsync(HERMES_BIN, ['logs', 'list'], {
+    const { stdout } = await execFileAsync(command, args, {
       timeout: 10000,
       ...execOpts,
     })
@@ -549,8 +547,10 @@ export async function readLogs(
   if (session) args.push('--session', session)
   if (since) args.push('--since', since)
 
+  const execTarget = buildHermesExec(undefined, args)
+
   try {
-    const { stdout } = await execFileAsync(HERMES_BIN, args, {
+    const { stdout } = await execFileAsync(execTarget.command, execTarget.args, {
       maxBuffer: 10 * 1024 * 1024,
       timeout: 15000,
       ...execOpts,

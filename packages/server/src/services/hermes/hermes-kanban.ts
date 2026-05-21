@@ -2,6 +2,7 @@ import { execFile, spawn } from 'child_process'
 import type { ChildProcess } from 'child_process'
 import { promisify } from 'util'
 import { logger } from '../logger'
+import { getHermesBin } from './hermes-path'
 
 const execFileAsync = promisify(execFile)
 
@@ -18,7 +19,7 @@ function resolveHermesBin(): string {
   return 'hermes'
 }
 
-const HERMES_BIN = resolveHermesBin()
+const HERMES_BIN = getHermesBin()
 
 export function normalizeBoardSlug(board?: string | null): string {
   if (board === undefined || board === null) return 'default'
