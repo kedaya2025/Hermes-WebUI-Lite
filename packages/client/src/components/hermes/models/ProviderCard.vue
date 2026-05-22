@@ -73,6 +73,21 @@ async function clearAlias() {
   await saveAlias()
 }
 
+const settingDefault = ref(false)
+
+async function setAsDefault() {
+  if (!aliasModel.value || !aliasProvider.value) return
+  settingDefault.value = true
+  try {
+    await appStore.switchModel(aliasModel.value, aliasProvider.value)
+    message.success(t('models.setDefaultSuccess'))
+  } catch (e: any) {
+    message.error(e.message || t('models.setDefaultFailed'))
+  } finally {
+    settingDefault.value = false
+  }
+}
+
 function openVisibilityModal() {
   const rule = appStore.getProviderVisibility(props.provider.provider)
   selectedVisibleModels.value = rule.mode === 'include' ? allModels.value.filter(m => rule.models.includes(m)) : [...allModels.value]
@@ -238,16 +253,33 @@ async function handleDelete() {
       :style="{ width: 'min(420px, calc(100vw - 32px))' }"
       :mask-closable="true"
     >
-      <NInput
-        v-model:value="aliasInput"
-        :placeholder="t('models.aliasPlaceholder')"
-        clearable
-        @keydown.enter="saveAlias"
-      />
-      <div v-if="aliasModel" class="model-alias-canonical">
-        {{ t('models.aliasCanonical', { model: aliasModel }) }}
+      <div class="model-settings-section">
+        <div class="model-settings-default">
+          <NButton
+            v-if="!isDefaultModel(aliasModel)"
+            type="primary"
+            size="small"
+            :loading="settingDefault"
+            @click="setAsDefault"
+          >
+            {{ t('models.setAsDefault') }}
+          </NButton>
+          <span v-else class="model-settings-default-badge">{{ t('models.alreadyDefault') }}</span>
+        </div>
       </div>
-      <div class="model-alias-hint">{{ t('models.aliasHint') }}</div>
+      <div class="model-settings-section">
+        <label class="model-settings-label">{{ t('models.aliasNameLabel') }}</label>
+        <NInput
+          v-model:value="aliasInput"
+          :placeholder="t('models.aliasPlaceholder')"
+          clearable
+          @keydown.enter="saveAlias"
+        />
+        <div v-if="aliasModel" class="model-alias-canonical">
+          {{ t('models.aliasCanonical', { model: aliasModel }) }}
+        </div>
+        <div class="model-alias-hint">{{ t('models.aliasHint') }}</div>
+      </div>
       <template #footer>
         <div class="model-alias-actions">
           <NButton quaternary :disabled="!appStore.getModelAlias(aliasModel, aliasProvider)" @click="clearAlias">
@@ -599,5 +631,32 @@ async function handleDelete() {
 
 .visibility-action-spacer {
   flex: 1;
+}
+
+.model-settings-section {
+  margin-bottom: 16px;
+}
+
+.model-settings-section:last-of-type {
+  margin-bottom: 0;
+}
+
+.model-settings-label {
+  display: block;
+  font-size: 12px;
+  color: $text-muted;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.model-settings-default {
+  display: flex;
+  align-items: center;
+}
+
+.model-settings-default-badge {
+  font-size: 12px;
+  color: $warning;
+  font-weight: 500;
 }
 </style>
